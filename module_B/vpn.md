@@ -1,4 +1,5 @@
-Вот готовые скрипты для настройки отказоустойчивых GRE-туннелей между роутерами. Вам нужно только заменить IP-адреса на ваши.
+Вот готовые скрипты для настройки отказоустойчивых GRE-туннелей между роутерами по топологии:
+![topology](../assets/VPN_Topology.png)
 
 ### 1. Основные скрипты настройки туннелей
 
@@ -13,9 +14,9 @@ MSK_LOCAL="200.100.100.20"     # DC-RTR-1 внешний IP
 MSK_TUN_IP="10.7.7.1/30"
 
 # Резервный туннель в Екатеринбург (через DC-RTR-2)
-EKT_REMOTE="10.6.6.2"    # DC-RTR-2 внутренний IP
-EKT_LOCAL="10.6.6.1"     # DC-RTR-1 внутренний IP
-EKT_TUN_IP="192.168.101.1/30"
+EKT_REMOTE="10.15.10.2"    # DC-RTR-2 внутренний IP
+EKT_LOCAL="10.15.10.3"     # DC-RTR-1 внутренний IP
+EKT_TUN_IP="10.8.8.1/30"
 
 MAIL_SERVER="10.15.10.100" # IP почтового сервера
 # ========================
@@ -26,18 +27,20 @@ ip link set gre-msk up
 ip addr add $MSK_TUN_IP dev gre-msk
 
 # Настройка резервного туннеля в Екатеринбург
+# Я не уверен в корректной работе этого блока
 ip tunnel add gre-ekt mode gre remote $EKT_REMOTE local $EKT_LOCAL ttl 255
 ip link set gre-ekt up
 ip addr add $EKT_TUN_IP dev gre-ekt
 
-# Включение маршрутизации
-echo 1 > /proc/sys/net/ipv4/ip_forward
+# Включение маршрутизации. Стоит заменить на: echo net.ipv4.ip_forward=1 > /etc/sysctl.conf
+#sysctl -p
+#echo 1 > /proc/sys/net/ipv4/ip_forward
 
 # Настройка маршрутов по умолчанию
 ip route replace $MAIL_SERVER via ${MSK_TUN_IP%/*} dev gre-msk metric 100
 ip route replace $MAIL_SERVER via ${EKT_TUN_IP%/*} dev gre-ekt metric 200
 
-# NAT для выхода в интернет
+# NAT для выхода в интернет. Не обязательно вставлять так как настройка НАТ проходит отдельно.
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 echo "Туннели на DC-RTR-1 настроены"
