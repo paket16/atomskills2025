@@ -1,6 +1,6 @@
 # Работы в ЦОД
 ## 1. Настроить L3 адреса на всех устр-вах
-![topology](..\assets\Topology_L3_AS25.png)
+![topology](../assets/Topology_L3_AS25.png)
 
 DC-MAILSERVER  	10.15.10.100
 
