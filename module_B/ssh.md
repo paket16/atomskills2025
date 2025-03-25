@@ -65,4 +65,8 @@ ssh-keygen -t ed25519 -f /ssh_keys/DC-RTR-2_key -C "cod_admin@DC-RTR-2"
 ssh-keygen -t ed25519 -f /ssh_keys/MSK-GITLAB_key -C "cod_admin@MSK-GITLAB"
 # ... и так для всех устройств
 ```
+## Копируем ключи на устройства (пример для DC-MAILSERVER):
+```
+scp /ssh_keys/DC-MAILSERVER_key.pub cod_admin@10.15.10.100:/home/cod_admin/.ssh/authorized_keys
 
+```
