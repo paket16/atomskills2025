@@ -69,7 +69,7 @@ auto eth0
 iface eth0 inet dhcp
 ```
 
-### MSK GITLAB
+### MSK GITLAB и MSK-DC
 Убрать настроенный интерфейс и заменить на:
 
 ```
