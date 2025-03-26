@@ -56,7 +56,8 @@ gateway 192.168.2.1
 
 ## MSK
 
-### MSK WORKER
+### MSK WORKER and MSK-ADMINPC
+
 
 ```
 source /etc/network/interfaces.d/*
