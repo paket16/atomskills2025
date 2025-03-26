@@ -12,86 +12,43 @@
 ```bash
 #!/bin/bash
 
-# Основной туннель в Москву
-MSK_REMOTE="188.121.90.2"   # MSK-RTR внешний IP
-MSK_LOCAL="200.100.100.20"     # DC-RTR-1 внешний IP
-MSK_TUN_IP="10.7.7.1/30"
-
-# Резервный туннель в Екатеринбург (через DC-RTR-2)
-EKT_REMOTE="10.15.10.2"    # DC-RTR-2 внутренний IP
-EKT_LOCAL="10.15.10.3"     # DC-RTR-1 внутренний IP
-EKT_TUN_IP="10.8.8.1/30"
-
 MAIL_SERVER="10.15.10.100" # IP почтового сервера
 # ========================
 
 # Настройка основного туннеля в Москву
-ip tunnel add gre-msk mode gre remote $MSK_REMOTE local $MSK_LOCAL ttl 255
+ip tunnel add gre-msk mode gre remote 188.121.90.2 local 200.100.100.20 ttl 255
 ip link set gre-msk up
-ip addr add $MSK_TUN_IP dev gre-msk
+ip addr add 10.7.7.1/30 dev gre-msk
 
 # Настройка резервного туннеля в Екатеринбург
-ip tunnel add gre-ekt mode gre remote $EKT_REMOTE local $EKT_LOCAL ttl 255
+ip tunnel add gre-ekt mode gre remote 88.8.8.27 local 200.100.100.20 ttl 255
 ip link set gre-ekt up
-ip addr add $EKT_TUN_IP dev gre-ekt
+ip addr add 10.6.6.1/30 dev gre-ekt
 
-# Настройка маршрутов по умолчанию
-ip route replace $MAIL_SERVER via ${MSK_TUN_IP%/*} dev gre-msk metric 100
-ip route replace $MAIL_SERVER via ${EKT_TUN_IP%/*} dev gre-ekt metric 200
-
-
-
-# Включение маршрутизации. Стоит заменить на: echo net.ipv4.ip_forward=1 > /etc/sysctl.conf
-#sysctl -p
-#echo 1 > /proc/sys/net/ipv4/ip_forward
-
-# NAT для выхода в интернет. Не обязательно вставлять так как настройка НАТ проходит отдельно.
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-
-echo "Туннели на DC-RTR-1 настроены"
+# Настройка маршрутов по умолчанию (СПРОСИТЬ У МИШи НУЖНО ли это)
+ip route replace 10.15.10.100 via ${MSK_TUN_IP%/*} dev gre-msk metric 100
+ip route replace 10.15.10.100 via ${EKT_TUN_IP%/*} dev gre-ekt metric 200
 ```
 
 #### Для DC-RTR-2 (`/usr/local/bin/setup_tunnels_dc2.sh`):
 ```bash
 #!/bin/bash
 
-# Основной туннель в Екатеринбург
-EKT_REMOTE="88.8.8.27"    # YEKT-RTR внешний IP
-EKT_LOCAL="100.200.100.20"     # DC-RTR-2 внешний IP
-EKT_TUN_IP="10.8.8.1/30"
-
-# Резервный туннель в Москву (через DC-RTR-1)
-MSK_REMOTE="10.15.10.3"    # DC-RTR-1 внутренний IP
-MSK_LOCAL="10.15.10.2"     # DC-RTR-2 внутренний IP
-MSK_TUN_IP="10.5.5.1/30"
-
 MAIL_SERVER="10.15.10.100" # IP почтового сервера
-# ========================
 
 # Настройка основного туннеля в Екатеринбург
-ip tunnel add gre-ekt mode gre remote $EKT_REMOTE local $EKT_LOCAL ttl 255
+ip tunnel add gre-ekt mode gre remote 88.8.8.27 local 100.200.100.20 ttl 255
 ip link set gre-ekt up
-ip addr add $EKT_TUN_IP dev gre-ekt
+ip addr add 10.8.8.1/30 dev gre-ekt
 
 # Настройка резервного туннеля в Москву
-ip tunnel add gre-msk mode gre remote $MSK_REMOTE local $MSK_LOCAL ttl 255
+ip tunnel add gre-msk mode gre remote 188.121.90.2 local 100.200.100.20 ttl 255
 ip link set gre-msk up
-ip addr add $MSK_TUN_IP dev gre-msk
+ip addr add 10.5.5.1/30 dev gre-msk 
 
-
-# Настройка маршрутов по умолчанию
-ip route replace $MAIL_SERVER via ${EKT_TUN_IP%/*} dev gre-ekt metric 100
-ip route replace $MAIL_SERVER via ${MSK_TUN_IP%/*} dev gre-msk metric 200
-
-
-
-#Нат и маршрутизация аналогично как и ранее
-# Включение маршрутизации
-echo 1 > /proc/sys/net/ipv4/ip_forward
-# NAT для выхода в интернет
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-
-echo "Туннели на DC-RTR-2 настроены"
+# Настройка маршрутов по умолчанию(СПРОСИТЬ У МИШи НУЖНО ли это)
+ip route replace 10.15.10.100 via ${EKT_TUN_IP%/*} dev gre-ekt metric 100
+ip route replace 10.15.10.100 via ${MSK_TUN_IP%/*} dev gre-msk metric 200
 ```
 
 ### 2. Скрипты мониторинга и failover
@@ -119,7 +76,12 @@ done
 ```bash
 #!/bin/bash
 
-# ===== CONFIGURATION =====
+#Создание туннеля на rtr2
+ip tunnel add gre-ekt mode gre remote 100.200.100.20 local 88.8.8.27 ttl 255
+ip link set gre-dc2 up
+ip addr add 10.8.8.2/30 dev gre-dc2
+
+
 MAIN_GW="10.8.8.2"  # DC-RTR-2 туннель IP
 BACKUP_GW="10.6.6.2" # DC-RTR-1 туннель IP
 TEST_HOST="10.10.10.10"   # Почтовый сервер
