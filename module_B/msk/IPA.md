@@ -4,7 +4,7 @@
 Перед использованием: `kinit -p admin`
 [python script](./import_users.py)
 ## Добавляем компы в домен 
-ИЗменяем sources.list
+Изменяем sources.list
 sudo apt update 
 sudo apt install astra-freeipa-client
 !!!ОБЯЗАТЕЛЬНО ПРОВЕРЬТЕ HOSTNAME!!!
