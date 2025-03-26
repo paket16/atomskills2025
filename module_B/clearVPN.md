@@ -12,7 +12,6 @@
 ```bash
 #!/bin/bash
 
-# ===== CONFIGURATION =====
 # Основной туннель в Москву
 MSK_REMOTE="188.121.90.2"   # MSK-RTR внешний IP
 MSK_LOCAL="200.100.100.20"     # DC-RTR-1 внешний IP
@@ -32,7 +31,6 @@ ip link set gre-msk up
 ip addr add $MSK_TUN_IP dev gre-msk
 
 # Настройка резервного туннеля в Екатеринбург
-# Я не уверен в корректной работе этого блока
 ip tunnel add gre-ekt mode gre remote $EKT_REMOTE local $EKT_LOCAL ttl 255
 ip link set gre-ekt up
 ip addr add $EKT_TUN_IP dev gre-ekt
@@ -57,7 +55,6 @@ echo "Туннели на DC-RTR-1 настроены"
 ```bash
 #!/bin/bash
 
-# ===== CONFIGURATION =====
 # Основной туннель в Екатеринбург
 EKT_REMOTE="88.8.8.27"    # YEKT-RTR внешний IP
 EKT_LOCAL="100.200.100.20"     # DC-RTR-2 внешний IP
@@ -103,27 +100,16 @@ echo "Туннели на DC-RTR-2 настроены"
 ```bash
 #!/bin/bash
 
-# ===== CONFIGURATION =====
 MAIN_GW="10.7.7.2"  # DC-RTR-1 туннель IP
 BACKUP_GW="10.5.5.2" # DC-RTR-2 туннель IP
 TEST_HOST="10.15.10.100"   # Почтовый сервер
 CHECK_INTERVAL=10         # Интервал проверки в секундах
-LOG_FILE="/var/log/gre_failover.log"
-# ========================
-
-log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> $LOG_FILE
-}
-
-log "Скрипт мониторинга запущен"
 
 while true; do
     if ping -c 3 -I gre-dc1 $TEST_HOST &> /dev/null; then
         ip route replace default via $MAIN_GW dev gre-dc1
-        log "Основной канал активен (через DC-RTR-1)"
     else
         ip route replace default via $BACKUP_GW dev gre-dc2
-        log "Переключение на резервный канал (через DC-RTR-2)"
     fi
     sleep $CHECK_INTERVAL
 done
@@ -138,46 +124,17 @@ MAIN_GW="10.8.8.2"  # DC-RTR-2 туннель IP
 BACKUP_GW="10.6.6.2" # DC-RTR-1 туннель IP
 TEST_HOST="10.10.10.10"   # Почтовый сервер
 CHECK_INTERVAL=10         # Интервал проверки в секундах
-LOG_FILE="/var/log/gre_failover.log"
-# ========================
-
-log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> $LOG_FILE
-}
-
-log "Скрипт мониторинга запущен"
 
 while true; do
     if ping -c 3 -I gre-dc2 $TEST_HOST &> /dev/null; then
         ip route replace default via $MAIN_GW dev gre-dc2
-        log "Основной канал активен (через DC-RTR-2)"
     else
         ip route replace default via $BACKUP_GW dev gre-dc1
-        log "Переключение на резервный канал (через DC-RTR-1)"
     fi
     sleep $CHECK_INTERVAL
 done
 ```
 
-### 3. Скрипты для тестирования (для пользователя test)
-
-#### disable_primary.sh:
-```bash
-#!/bin/bash
-
-# Эмулирует отказ основного канала
-ip link set gre-dc1 down
-echo "Основной туннель отключен (gre-dc1)"
-```
-
-#### enable_primary.sh:
-```bash
-#!/bin/bash
-
-# Восстанавливает основной канал
-ip link set gre-dc1 up
-echo "Основной туннель восстановлен (gre-dc1)"
-```
 
 ### 4. IPSec настройка (общий шаблон для всех узлов)
 
@@ -211,15 +168,3 @@ conn gre-tunnel
 ```
 @LOCAL_ID @REMOTE_ID : PSK "your_shared_secret_key"
 ```
-
-### Инструкция по применению:
-1. Замените все IP-адреса в CONFIGURATION секциях на ваши
-2. Для IPSec замените LOCAL_ID, REMOTE_ID и your_shared_secret_key
-3. Сделайте скрипты исполняемыми:
-   ```bash
-   chmod +x /usr/local/bin/*.sh
-   ```
-4. Настройте автозапуск через systemd или cron @reboot
-5. Для тестирования используйте скрипты disable_primary.sh/enable_primary.sh
-
-Все скрипты логируют свои действия, что упрощает диагностику проблем.
