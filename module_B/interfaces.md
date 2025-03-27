@@ -83,3 +83,33 @@ iface enp1s0 inet static
 address 192.168.1.3/24
 gateway 192.168.1.1
 ```
+
+### DC STORAGE
+
+```
+source /etc/network/interfaces.d/*
+
+auto lo
+iface lo inet loopback
+
+auto enp1s0
+allow-hotplug enp1s0
+iface enp1s0 inet static
+address 10.15.10.150/24
+gateway 10.15.10.1
+```
+
+### DC MAILSERVER
+Убрать настроенный интерфейс и заменить на:
+
+```
+source /etc/network/interfaces.d/*
+
+auto lo
+iface lo inet loopback
+
+auto enp1s0
+iface enp1s0 inet static
+address 10.15.10.100/24
+gateway 10.15.10.1
+```
