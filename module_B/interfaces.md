@@ -56,7 +56,8 @@ gateway 192.168.2.1
 
 ## MSK
 
-### MSK WORKER
+### MSK WORKER and MSK-ADMINPC
+
 
 ```
 source /etc/network/interfaces.d/*
@@ -68,7 +69,7 @@ auto eth0
 iface eth0 inet dhcp
 ```
 
-### MSK GITLAB
+### MSK GITLAB и MSK-DC
 Убрать настроенный интерфейс и заменить на:
 
 ```
@@ -77,8 +78,8 @@ source /etc/network/interfaces.d/*
 auto lo
 iface lo inet loopback
 
-auto eth0
-iface eth0 inet static
+auto enp1s0
+iface enp1s0 inet static
 address 192.168.1.3/24
 gateway 192.168.1.1
 ```
