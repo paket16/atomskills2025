@@ -1,0 +1,1 @@
+sudo -i && cd /usr/local/share/ca-certificates/ && wget http://192.168.1.2/Cool_CA.crt &&  update-ca-certificates
