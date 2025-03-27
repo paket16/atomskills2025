@@ -2,8 +2,6 @@
 ![topology](../assets/VPN_Topology.png)
 
 
-Логи из всех скриптов можно убрать
-
 ### 1. Основные скрипты настройки туннелей
 
 #### Для DC-RTR-1 (`/usr/local/bin/setup_tunnels_dc1.sh`):
@@ -57,6 +55,11 @@ ip route replace 10.15.10.100 via ${MSK_TUN_IP%/*} dev gre-msk metric 200
 ```bash
 #!/bin/bash
 
+#Создание туннеля на rtr2
+ip tunnel add gre-dc2 mode gre remote 100.200.100.20 local 88.8.8.27 ttl 255
+ip link set gre-dc2 up
+ip addr add 10.5.5.2/30 dev gre-dc2
+
 MAIN_GW="10.7.7.2"  # DC-RTR-1 туннель IP
 BACKUP_GW="10.5.5.2" # DC-RTR-2 туннель IP
 TEST_HOST="10.15.10.100"   # Почтовый сервер
@@ -77,7 +80,7 @@ done
 #!/bin/bash
 
 #Создание туннеля на rtr2
-ip tunnel add gre-ekt mode gre remote 100.200.100.20 local 88.8.8.27 ttl 255
+ip tunnel add gre-dc2 mode gre remote 100.200.100.20 local 88.8.8.27 ttl 255
 ip link set gre-dc2 up
 ip addr add 10.8.8.2/30 dev gre-dc2
 
