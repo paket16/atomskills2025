@@ -1,65 +1,81 @@
 Вот готовые скрипты для настройки отказоустойчивых GRE-туннелей между роутерами по топологии:
 ![topology](../assets/VPN_Topology.png)
 
-
 ### 1. Основные скрипты настройки туннелей
 
-#### Для DC-RTR-1 (`/usr/local/bin/setup_tunnels_dc1.sh`):
-Создать setup_tunnels_dc1.sh и добавить права на использование
-` chmod +x /usr/local/bin/*.sh ` аналогично для остальных скриптов
+#### Для DC-RTR-1 (`./gre-msk-ekt-up.sh`):
+```bash
+touch ./gre-msk-ekt-up.sh
+chmod +x ./*.sh
+```
 ```bash
 #!/bin/bash
-
-MAIL_SERVER="10.15.10.100" # IP почтового сервера
-# ========================
-
 # Настройка основного туннеля в Москву
-ip tunnel add gre-msk mode gre remote 188.121.90.2 local 200.100.100.20 ttl 255
+ip tunnel add gre-msk mode gre remote 188.121.90.2 local 200.100.100.20 ttl 64
 ip link set gre-msk up
 ip addr add 10.7.7.1/30 dev gre-msk
 
 # Настройка резервного туннеля в Екатеринбург
-ip tunnel add gre-ekt mode gre remote 88.8.8.27 local 200.100.100.20 ttl 255
+ip tunnel add gre-ekt mode gre remote 88.8.8.27 local 200.100.100.20 ttl 64
 ip link set gre-ekt up
 ip addr add 10.6.6.1/30 dev gre-ekt
-
+```
+```bash
+MAIL_SERVER="10.15.10.100" # IP почтового сервера
 # Настройка маршрутов по умолчанию (СПРОСИТЬ У МИШи НУЖНО ли это)
 ip route replace 10.15.10.100 via ${MSK_TUN_IP%/*} dev gre-msk metric 100
 ip route replace 10.15.10.100 via ${EKT_TUN_IP%/*} dev gre-ekt metric 200
 ```
 
-#### Для DC-RTR-2 (`/usr/local/bin/setup_tunnels_dc2.sh`):
+#### Для DC-RTR-2 (`./gre-msk-ekt-up.sh`):
+```bash
+touch ./gre-msk-ekt-up.sh
+chmod +x ./*.sh
+```
 ```bash
 #!/bin/bash
-
-MAIL_SERVER="10.15.10.100" # IP почтового сервера
-
 # Настройка основного туннеля в Екатеринбург
-ip tunnel add gre-ekt mode gre remote 88.8.8.27 local 100.200.100.20 ttl 255
+ip tunnel add gre-ekt mode gre remote 88.8.8.27 local 100.200.100.20 ttl 64
 ip link set gre-ekt up
 ip addr add 10.8.8.1/30 dev gre-ekt
 
 # Настройка резервного туннеля в Москву
-ip tunnel add gre-msk mode gre remote 188.121.90.2 local 100.200.100.20 ttl 255
+ip tunnel add gre-msk mode gre remote 188.121.90.2 local 100.200.100.20 ttl 64
 ip link set gre-msk up
 ip addr add 10.5.5.1/30 dev gre-msk 
+```
 
+```bash
+MAIL_SERVER="10.15.10.100" # IP почтового сервера
 # Настройка маршрутов по умолчанию(СПРОСИТЬ У МИШи НУЖНО ли это)
 ip route replace 10.15.10.100 via ${EKT_TUN_IP%/*} dev gre-ekt metric 100
 ip route replace 10.15.10.100 via ${MSK_TUN_IP%/*} dev gre-msk metric 200
 ```
 
-### 2. Скрипты мониторинга и failover
+### 2. Скрипты создания туннелей, мониторинга и failover
 
-#### Для MSK-RTR (`/usr/local/bin/failover_msk.sh`):
+#### Для MSK-RTR (`./gre-dc12-up.sh`):
+```bash
+touch ./gre-dc12-up.sh
+chmod +x ./*.sh
+```
+
 ```bash
 #!/bin/bash
+# Настройка основного туннеля в DC-1
+ip tunnel add gre-dc1 mode gre remote 200.100.100.20 local 188.121.90.2 ttl 64
+ip link set gre-dc1 up
+ip addr add 10.7.7.2/30 dev gre-dc1
 
-#Создание туннеля на rtr2
-ip tunnel add gre-dc2 mode gre remote 100.200.100.20 local 88.8.8.27 ttl 255
+# Настройка резервного туннеля в DC-2
+ip tunnel add gre-dc2 mode gre remote 100.200.100.20 local 188.121.90.2 ttl 64
 ip link set gre-dc2 up
 ip addr add 10.5.5.2/30 dev gre-dc2
+```
+================
 
+Логика?:
+```bash
 MAIN_GW="10.7.7.2"  # DC-RTR-1 туннель IP
 BACKUP_GW="10.5.5.2" # DC-RTR-2 туннель IP
 TEST_HOST="10.15.10.100"   # Почтовый сервер
@@ -75,15 +91,28 @@ while true; do
 done
 ```
 
-#### Для YEKT-RTR (`/usr/local/bin/failover_yekt.sh`):
+#### Для YEKT-RTR (`./gre-dc12-up.sh`):
+```bash
+touch ./gre-dc12-up.sh
+chmod +x ./*.sh
+```
+
 ```bash
 #!/bin/bash
+# Настройка основного туннеля в DC-1
+ip tunnel add gre-dc1 mode gre remote 200.100.100.20 local 88.8.8.27 ttl 64
+ip link set gre-dc1 up
+ip addr add 10.6.6.2/30 dev gre-dc1
 
-#Создание туннеля на rtr2
-ip tunnel add gre-dc2 mode gre remote 100.200.100.20 local 88.8.8.27 ttl 255
+# Настройка резервного туннеля в DC-2
+ip tunnel add gre-dc2 mode gre remote 100.200.100.20 local 88.8.8.27 ttl 64
 ip link set gre-dc2 up
 ip addr add 10.8.8.2/30 dev gre-dc2
+```
 
+
+```bash
+#!/bin/bash
 
 MAIN_GW="10.8.8.2"  # DC-RTR-2 туннель IP
 BACKUP_GW="10.6.6.2" # DC-RTR-1 туннель IP
@@ -99,6 +128,10 @@ while true; do
     sleep $CHECK_INTERVAL
 done
 ```
+
+
+## На будущее
+Из-за особенности работы IPsec на каждом роутере работает только один туннель, как только останавливаем ipsec туннели начинают работать корректно.
 
 
 ### 4. IPSec настройка (общий шаблон для всех узлов)
