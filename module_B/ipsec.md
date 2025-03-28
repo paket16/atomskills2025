@@ -2,6 +2,7 @@
 
 Команды для применения:
 ```bash
+ipsec start
 ipsec restart
 ipsec status vpn-gre-ekt
 ```
@@ -91,8 +92,8 @@ conn vpn-gre-dc1
     authby=secret
     left=188.121.90.2
     right=200.100.100.20
-    leftsubnet=0.0.0.0/0
-    rightsubnet=192.168.2.0/24
+    leftsubnet=192.168.1.0/24
+    rightsubnet=10.15.10.0/24
     leftprotoport=gre
     rightprotoport=gre
     ike=aes128-sha256-modp3072
@@ -104,8 +105,8 @@ conn vpn-gre-dc2
     authby=secret
     left=188.121.90.2
     right=100.200.100.20
-    leftsubnet=0.0.0.0/0
-    rightsubnet=192.168.2.0/24
+    leftsubnet=192.168.1.0/24
+    rightsubnet=10.15.10.0/24
     leftprotoport=gre
     rightprotoport=gre
     ike=aes128-sha256-modp3072
@@ -119,7 +120,7 @@ conn vpn-gre-dc2
 ```
 
 ### Для YEKT-RTR
-Защита туннеля в DC-1
+Защита туннеля в DC-1 и DC-2
 ```ini
 conn vpn-gre-dc1
     auto=start
@@ -127,24 +128,21 @@ conn vpn-gre-dc1
     authby=secret
     left=88.8.8.27
     right=200.100.100.20
-    leftsubnet=0.0.0.0/0
-    rightsubnet=0.0.0.0/0
+    leftsubnet=192.168.2.0/24
+    rightsubnet=10.15.10.0/24
     leftprotoport=gre
     rightprotoport=gre
     ike=aes128-sha256-modp3072
     esp=aes128-sha256
-```
 
-Защита туннеля в DC-2
-```ini
 conn vpn-gre-dc2
     auto=start
     type=tunnel
     authby=secret
     left=88.8.8.27
     right=100.200.100.20
-    leftsubnet=0.0.0.0/0
-    rightsubnet=0.0.0.0/0
+    leftsubnet=192.168.2.0/24
+    rightsubnet=10.15.10.0/24
     leftprotoport=gre
     rightprotoport=gre
     ike=aes128-sha256-modp3072
