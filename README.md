@@ -9,5 +9,7 @@
     - Защита инфраструктуры
 - C
     - Pentest
+ https://github.com/Last-Guy-In-Stars/championship
+
 - D
     - Foresinc`s
