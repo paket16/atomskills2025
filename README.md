@@ -5,6 +5,8 @@
 # Модули
 - A
     - CTf defense-based
+
+https://github.com/teal-bauer/GhydraMCP
 - B
     - Защита инфраструктуры
 - C
